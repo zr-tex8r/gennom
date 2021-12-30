@@ -1,0 +1,129 @@
+%%
+%% This is file 'gennom.sty'.
+%%
+%% Copyright (c) 2021 Takayuki YATO (aka. "ZR")
+%%   GitHub:   https://github.com/zr-tex8r
+%%   Twitter:  @zr_tex8r
+%%
+%% This package is distributed under the MIT License.
+%%
+
+%% package declaration
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{gennom}[2021/11/11 v0.2]
+
+%% preparation
+\def\bxfgn@pkgname{gennom}
+\providecommand\bxDebug[1]{}
+
+%--------------------------------------- general
+
+%% packages
+\RequirePackage{iftex,ifpdf}
+
+%% variables
+\newif\ifbxfgn@dvipdfmx
+
+%% \bxfgn@family
+\def\bxfgn@family{gennom}
+
+%% \bxfgn@font@file@name
+\def\bxfgn@font@file@name{GenEiNombre.ttf}
+
+%% \bxfgn@decl@shape
+\@onlypreamble\bxfgn@decl@shape
+\def\bxfgn@decl@shape#1#2#3{%
+  \DeclareFontShape{\bxfgn@enc}{\bxfgn@family}{#1}{#2}{#3}{}}
+
+%% \bxfgn@mode
+\chardef\bxfgn@mode=0
+\ifpdf \chardef\bxfgn@mode=1 \fi
+\ifLuaTeX \chardef\bxfgn@mode=3 \fi
+\ifXeTeX \chardef\bxfgn@mode=3 \fi
+
+%--------------------------------------- options
+
+%% driver options
+\DeclareOption{dvipdfmx}{%
+  \bxfgn@dvipdfmxtrue}
+\DeclareOption{dvips}{%
+  \bxfgn@dvipdfmxfalse}
+\DeclareOption{dviout}{%
+  \bxfgn@dvipdfmxfalse}
+\DeclareOption{xdvi}{%
+  \bxfgn@dvipdfmxfalse}
+\DeclareOption{nodvidriver}{%
+  \bxfgn@dvipdfmxfalse}
+%% dispatch
+\ProcessOptions*
+
+%% check environment
+\ifbxfgn@dvipdfmx
+  \ifnum\bxfgn@mode=0
+    \chardef\bxfgn@mode=2
+  \else
+    \PackageError\bxfgn@pkgname
+     {Option 'dvipdfmx' given on wrong engine}
+     {\@ehc}
+    \bxfgn@dvipdfmxfalse
+  \fi
+\fi
+\ifnum\bxfgn@mode=0
+  \PackageError\bxfgn@pkgname
+   {Unsupported settings.\MessageBreak
+    Note: if you're using dvipdfmx, then you must set\MessageBreak
+    'dvipdfmx' option}
+   {Package loading will be aborted.\MessageBreak\@ehc}
+\expandafter\endinput\fi\relax
+
+%--------------------------------------- user interface
+
+%%<*> \gennomfamily
+\DeclareRobustCommand*{\gennomfamily}{%
+  \not@math@alphabet\gennomfamily\relax
+  \fontfamily{\bxfgn@family}\selectfont}
+%%<*> \textgennom
+\DeclareTextFontCommand{\textgennom}{\gennomfamily}
+
+%--------------------------------------- font declaration (legacy)
+\ifnum\bxfgn@mode<3
+
+%% font family 'gennom'
+\@for\bxfgn@enc:={OT1,T1,LY1,TS1}\do{%
+  \expandafter\ifx\csname T@\bxfgn@enc\endcsname\relax\else
+    \def\bxfgn@tmpa#1\relax{\lowercase{\def\bxfgn@tmpa{#1}}}%
+    \expandafter\bxfgn@tmpa\bxfgn@enc\relax
+    \DeclareFontFamily{\bxfgn@enc}{\bxfgn@family}{}%
+    \bxfgn@decl@shape{m}{n}{<->\bxfgn@family-r-\bxfgn@tmpa}%
+    \bxfgn@decl@shape{b}{n}{<->ssub*\bxfgn@family/m/n}%
+    \bxfgn@decl@shape{bx}{n}{<->ssub*\bxfgn@family/m/n}%
+  \fi}
+
+%% font map settings
+\ifnum\bxfgn@mode=1
+  \pdfmapline{+r-\bxfgn@family-r-u@Unicode@ <\bxfgn@font@file@name}
+\else\ifnum\bxfgn@mode=2
+  \AtBeginDvi{\special{pdf:mapline
+    r-\bxfgn@family-r-u@Unicode@ unicode \bxfgn@font@file@name}}
+\fi\fi
+
+\fi
+%--------------------------------------- font declaration (Unicode)
+\ifnum\bxfgn@mode=3
+
+\def\bxfgn@enc{TU}
+\expandafter\ifx\csname T@\bxfgn@enc\endcsname\relax
+  \edef\bxfgn@enc{\ifLuaTeX EU2\else EU1\fi}
+\fi
+
+%% font family 'gennom'
+\bxfgn@decl@shape{m}{n}{<->%
+  \ifLuaTeX file:\bxfgn@font@file@name:script=latn;+trep;+tlig;%
+  \else     "[\bxfgn@font@file@name]:mapping=tex-text"%
+  \fi}
+\bxfgn@decl@shape{b}{n}{<->ssub*\bxfgn@family/m/n}{}%
+\bxfgn@decl@shape{bx}{n}{<->ssub*\bxfgn@family/m/n}{}%
+
+\fi
+%--------------------------------------- done
+\endinput
